@@ -1,12 +1,10 @@
 import './charList.scss';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import MarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/errorMessage';
 
 const CharList = (props) => {
-
-
     const [chars, setChars] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -14,23 +12,25 @@ const CharList = (props) => {
     const [offset, setOffset] = useState(197);
     const [charEnded, setCharEnded] = useState(false);
 
-    const marvelService = new MarvelService();
+    const [activeElement, setActiveElement] = useState(null);
+
+    const marvelService = useMemo(() => new MarvelService(), []);
 
 
     useEffect(() => {
         onRequest();
     }, [])
 
-    const onRequest = (offset) => {
-        onCharListLoading()
+    const onCharListLoading = useCallback(() => {
+        setNewItemLoading(true)
+    }, [])
+
+    const onRequest = useCallback((offset) => {
+        onCharListLoading();
         marvelService.getAllCharacters(offset)
             .then(onCharListLoaded)
             .catch(onError)
-    }
-
-    const onCharListLoading = () => {
-        setNewItemLoading(true)
-    }
+    }, [onCharListLoading, marvelService])
 
     const onCharListLoaded = (chars) => {
         let ended = false;
@@ -58,7 +58,10 @@ const CharList = (props) => {
                     key={item.id}
                     id={item.id}
                     onCharSelected={props.onCharSelected}
-                    index={index} />
+                    index={index}
+                    activeElement={activeElement}
+                    setActiveElement={setActiveElement}
+                />
             )
         })
 
@@ -69,19 +72,22 @@ const CharList = (props) => {
         )
     }
 
+    const onClickHandler = useCallback(() => {
+        onRequest(offset);
+    }, [onRequest, offset]);
+ 
     const items = renderItems(chars);
-    const errorMessage = error ? <ErrorMessage /> : null;
-    const spinner = loading ? <Spinner /> : null;
-    const content = !(loading || error) ? items : null;
+    const content = !(loading || error) && items;
+
     return (
         <div className="char__list" >
-            {errorMessage}
-            {spinner}
+            {error && <ErrorMessage />}
+            {loading && <Spinner />}
             {content}
             <button className="button button__main button__long"
                 disabled={newItemLoading}
                 style={{ 'display': charEnded ? 'none' : 'block' }}
-                onClick={() => onRequest(offset)}>
+                onClick={onClickHandler}>
                 <div className="inner">load more</div>
             </button>
         </div >
@@ -92,17 +98,21 @@ const CharList = (props) => {
 
 
 
-const CharComponent = (props) => {
-    const { src, name, id, onCharSelected, index } = props;
+const CharComponent = ({
+    src,
+    name,
+    id,
+    onCharSelected,
+    activeElement,
+    setActiveElement
+}) => {
 
-    const itemRefs = useRef([]);
-
-    const focusOnItem = (id) => {
-        console.log(itemRefs)
-        itemRefs.current.forEach(item => item.classList.remove('char__item_selected'));
-        itemRefs.current[id].classList.add('char__item_selected');
-        itemRefs.current[id].focus();
-    }
+    const ref = useRef();
+    const onClick = useCallback(() => {
+        onCharSelected(id);
+        ref.current.focus();
+        setActiveElement(id);
+    }, [id, onCharSelected, setActiveElement])
 
     let imgStyle = { 'objectFit': 'cover' };
     if (src === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
@@ -110,13 +120,10 @@ const CharComponent = (props) => {
     }
 
     return (
-        <li onClick={() => {
-            onCharSelected(id);
-            focusOnItem(index);
-        }}
-            className="char__item"
+        <li onClick={onClick}
+            className={`char__item ${activeElement === id && 'char__item_selected'}`}
             key={id}
-            ref={el => itemRefs.current[index] = el}>
+            ref={ref}>
 
             <img src={src} alt={name} style={imgStyle} />
             <div className="char__name">{name}</div>
