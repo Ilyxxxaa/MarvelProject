@@ -4,23 +4,16 @@ import MarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/errorMessage';
 import Skeleton from '../skeleton/Skeleton';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
-const CharInfo = (props) => {
+const CharInfo = ({ charId }) => {
     const [char, setChar] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
 
-    const marvelService = new MarvelService();
+    const marvelService = useMemo(() => new MarvelService(), []);
 
-    useEffect(() => {
-        updateChar()
-    }, [props.charId]);
-
-
-    const updateChar = () => {
-        const { charId } = props;
-
+    const updateChar = useCallback(() => {
         if (!charId) {
             return
         }
@@ -30,7 +23,11 @@ const CharInfo = (props) => {
             .then(onCharLoaded)
             .catch(onError)
 
-    }
+    }, [charId, marvelService]);
+
+    useEffect(() => {
+        updateChar()
+    }, [updateChar]);
 
     const onCharLoading = () => {
         setLoading(true)
