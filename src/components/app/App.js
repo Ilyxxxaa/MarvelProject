@@ -6,23 +6,26 @@ import ErrorBoundary from "../errorBoundary/ErrorBoundary";
 
 import decoration from '../../resources/img/vision.png';
 import { useState } from "react";
+import ComicsList from "../comicsList/ComicsList";
+import AppBanner from "../appBanner/AppBanner";
 
 const App = () => {
 
-    const [selectedChar, setChar] = useState(null)
+    // const [selectedChar, setChar] = useState(null)
 
 
-    const onCharSelected = (id) => {
-        setChar(id);
-    }
+    // const onCharSelected = (id) => {
+    //     setChar(id);
+    // }
 
 
     return (
         <div className="app" >
             <AppHeader />
             <main>
-
-                <ErrorBoundary>
+                <AppBanner />
+                <ComicsList />
+                {/* <ErrorBoundary>
                     <RandomChar />
                 </ErrorBoundary>
 
@@ -37,7 +40,7 @@ const App = () => {
                     </ErrorBoundary>
 
                 </div>
-                <img className="bg-decoration" src={decoration} alt="vision" />
+                <img className="bg-decoration" src={decoration} alt="vision" /> */}
             </main>
         </div>
     )
