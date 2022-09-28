@@ -1,50 +1,34 @@
 import './charInfo.scss';
-import thor from '../../resources/img/thor.jpeg';
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 import Spinner from '../spinner/spinner';
 import ErrorMessage from '../errorMessage/errorMessage';
 import Skeleton from '../skeleton/Skeleton';
 import { useState, useEffect } from 'react';
 
-const CharInfo = (props) => {
-    const [char, setChar] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
+const CharInfo = ({ charId }) => {
 
-    const marvelService = new MarvelService();
+    const [char, setChar] = useState(null);
+    const { loading, error, getCharacter, setLoading } = useMarvelService();
+
+
 
     useEffect(() => {
+        setLoading(false);
         updateChar()
-    }, [props.charId]);
+    }, [charId]);
 
 
     const updateChar = () => {
-        const { charId } = props;
 
         if (!charId) {
             return
         }
-
-        onCharLoading();
-        marvelService.getCharacter(charId)
+        getCharacter(charId)
             .then(onCharLoaded)
-            .catch(onError)
-
-    }
-
-    const onCharLoading = () => {
-        setLoading(true)
     }
 
     const onCharLoaded = (char) => {
         setChar(char);
-        setLoading(false);
-        setError(false);
-    }
-
-    const onError = () => {
-        setLoading(false);
-        setError(true);
     }
 
 
